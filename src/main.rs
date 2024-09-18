@@ -1,9 +1,10 @@
-use anyhow::Error;
 use clap::{Arg, Command};
+use std::process::ExitCode;
 
-mod init;
+mod plusgit;
 
 pub const PLUSGIT_DIR: &'static str = ".plusgit";
+pub const OBJECTS_DIR: &'static str = "objects";
 
 fn cli() -> Command {
     Command::new("git")
@@ -16,15 +17,18 @@ fn cli() -> Command {
         )
 }
 
-fn main() -> Result<(), Error> {
+fn main() -> ExitCode {
     let matches = cli().get_matches();
 
     match matches.subcommand() {
         Some(("init", sub_matches)) => {
-            init::run(sub_matches.get_one::<String>("path").unwrap());
+            if let Err(e) = plusgit::init(sub_matches.get_one::<String>("path").unwrap()) {
+                println!("{e}");
+                return ExitCode::from(1);
+            }
         }
         _ => unreachable!(),
     }
 
-    Ok(())
+    ExitCode::from(0)
 }
