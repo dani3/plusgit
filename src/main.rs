@@ -3,6 +3,8 @@ use clap::{Arg, Command};
 
 mod init;
 
+pub const PLUSGIT_DIR: &'static str = ".plusgit";
+
 fn cli() -> Command {
     Command::new("git")
         .arg_required_else_help(true)
