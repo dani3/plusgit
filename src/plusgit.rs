@@ -1,44 +1,18 @@
-/// # (Git) Init
+/// # Plusgit
 ///
-/// This module implements all the logic for supporting the `init` Git command.
-use std::{
-    fs::{self, File},
-    io::{self, Write},
-    path::{Path, PathBuf},
-};
-
-use crate::error::PlusGitError::NotInsideRepoError;
+/// This module implements all the commands of Plusgit.
 use crate::{error::PlusGitError, repo};
+use crate::{error::PlusGitError::NotInsideRepoError, object};
 use anyhow::Result;
-use sha2::{Digest, Sha256};
-
-/// Helper function that checks if we are running inside a plusgit repository.
-fn is_inside_repo() -> bool {
-    let current_dir = std::env::current_dir().unwrap();
-    current_dir
-        .read_dir()
-        .unwrap()
-        .any(|f| f.unwrap().file_name() == crate::PLUSGIT_DIR)
-}
 
 /// Implementation of the `init` plusgit command that creates a new empty repository.
 /// It receives as a parameter the path where the repository should be created.
-pub fn init(path: &String) -> Result<(), io::Error> {
-    let plusgit_dir_str: String = format!("{}/{}", path, crate::PLUSGIT_DIR);
-    let plusgit_dir: &Path = Path::new(&plusgit_dir_str);
-    let objects_dir: PathBuf = Path::new(&plusgit_dir_str).join(crate::OBJECTS_DIR);
-
-    // create the .plusgit directory
-    std::fs::create_dir_all(plusgit_dir)?;
-    // create the .plusgit/objects directory
-    std::fs::create_dir(objects_dir)?;
+pub fn init(path: &String) -> Result<(), PlusGitError> {
+    let path = repo::init(path)?;
 
     println!(
         "{}",
-        format!(
-            "Initialized empty plusgit repository in {}",
-            plusgit_dir.canonicalize().unwrap().display()
-        )
+        format!("Initialized empty plusgit repository in {}", path)
     );
     Ok(())
 }
@@ -46,21 +20,11 @@ pub fn init(path: &String) -> Result<(), io::Error> {
 /// Compute object ID and create an object from a file.
 /// See https://git-scm.com/docs/git-hash-object
 pub fn hash_object(filepath: &String) -> Result<(), PlusGitError> {
-    if !is_inside_repo() {
+    if !repo::is_inside_repo() {
         return Err(NotInsideRepoError);
     }
 
-    // Hash the file using SHA256.
-    let bytes: Vec<u8> = std::fs::read(filepath)?;
-    let mut hasher = Sha256::new();
-    hasher.update(&bytes);
-    let hash = format!("{:X}", hasher.finalize());
-
-    // Store the file using the hash as the filename.
-    let mut object_path = repo::objects_dir();
-    object_path.push(&hash);
-    let mut file = File::create(object_path)?;
-    file.write(&bytes)?;
+    let hash = object::hash(filepath)?;
     println!("Hash of '{}' is '{}'", filepath, hash);
 
     Ok(())
@@ -69,15 +33,7 @@ pub fn hash_object(filepath: &String) -> Result<(), PlusGitError> {
 /// Provide contents or details of repository objects
 /// See https://git-scm.com/docs/git-cat-file
 pub fn cat_file(object: &String) -> Result<(), PlusGitError> {
-    if let Some(f) = repo::objects_dir()
-        .read_dir()
-        .unwrap()
-        .find(|f| f.as_ref().unwrap().file_name().to_str().unwrap() == object)
-    {
-        println!("{}", fs::read_to_string(f?.path())?);
-    } else {
-        return Err(PlusGitError::ObjectNotFoundError);
-    }
-
+    let content = object::from_hash(object)?;
+    println!("{}", content);
     Ok(())
 }

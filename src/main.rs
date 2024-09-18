@@ -2,11 +2,9 @@ use clap::{Arg, Command};
 use std::process::ExitCode;
 
 mod error;
+mod object;
 mod plusgit;
 mod repo;
-
-pub const PLUSGIT_DIR: &'static str = ".plusgit";
-pub const OBJECTS_DIR: &'static str = "objects";
 
 fn cli() -> Command {
     Command::new("git")
