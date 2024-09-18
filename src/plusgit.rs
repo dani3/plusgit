@@ -3,7 +3,7 @@
 /// This module implements all the logic for supporting the `init` Git command.
 use std::{
     fs::File,
-    io::{self, Write},
+    io::{self},
     path::{Path, PathBuf},
 };
 
@@ -62,6 +62,7 @@ pub fn hash_object(filepath: &String) -> Result<(), PlusGitError> {
     object_path.push(crate::OBJECTS_DIR);
     object_path.push(&hash);
     File::create(object_path)?;
+    println!("Hash of '{}' is '{}'", filepath, hash);
 
     Ok(())
 }
