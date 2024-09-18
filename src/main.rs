@@ -1,6 +1,7 @@
 use clap::{Arg, Command};
 use std::process::ExitCode;
 
+mod error;
 mod plusgit;
 
 pub const PLUSGIT_DIR: &'static str = ".plusgit";
@@ -15,6 +16,11 @@ fn cli() -> Command {
                 .about("Create an empty Git repository")
                 .arg(Arg::new("path").default_value(".")),
         )
+        .subcommand(
+            Command::new("hash-object")
+                .about("Compute object ID and optionally create an object from a file")
+                .arg(Arg::new("file").required(true)),
+        )
 }
 
 fn main() -> ExitCode {
@@ -23,6 +29,12 @@ fn main() -> ExitCode {
     match matches.subcommand() {
         Some(("init", sub_matches)) => {
             if let Err(e) = plusgit::init(sub_matches.get_one::<String>("path").unwrap()) {
+                println!("{e}");
+                return ExitCode::from(1);
+            }
+        }
+        Some(("hash-object", sub_matches)) => {
+            if let Err(e) = plusgit::hash_object(sub_matches.get_one::<String>("file").unwrap()) {
                 println!("{e}");
                 return ExitCode::from(1);
             }

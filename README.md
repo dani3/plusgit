@@ -1,2 +1,3 @@
 # plusgit
-Implementation of Git in Rust
+
+This is my own implementation of Git in Rust.
