@@ -2,13 +2,13 @@
 ///
 /// This module implements all the logic for supporting the `init` Git command.
 use std::{
-    fs::File,
-    io::{self},
+    fs::{self, File},
+    io::{self, Write},
     path::{Path, PathBuf},
 };
 
-use crate::error::PlusGitError;
 use crate::error::PlusGitError::NotInsideRepoError;
+use crate::{error::PlusGitError, repo};
 use anyhow::Result;
 use sha2::{Digest, Sha256};
 
@@ -53,16 +53,31 @@ pub fn hash_object(filepath: &String) -> Result<(), PlusGitError> {
     // Hash the file using SHA256.
     let bytes: Vec<u8> = std::fs::read(filepath)?;
     let mut hasher = Sha256::new();
-    hasher.update(bytes);
+    hasher.update(&bytes);
     let hash = format!("{:X}", hasher.finalize());
 
     // Store the file using the hash as the filename.
-    let mut object_path = PathBuf::new();
-    object_path.push(crate::PLUSGIT_DIR);
-    object_path.push(crate::OBJECTS_DIR);
+    let mut object_path = repo::objects_dir();
     object_path.push(&hash);
-    File::create(object_path)?;
+    let mut file = File::create(object_path)?;
+    file.write(&bytes)?;
     println!("Hash of '{}' is '{}'", filepath, hash);
+
+    Ok(())
+}
+
+/// Provide contents or details of repository objects
+/// See https://git-scm.com/docs/git-cat-file
+pub fn cat_file(object: &String) -> Result<(), PlusGitError> {
+    if let Some(f) = repo::objects_dir()
+        .read_dir()
+        .unwrap()
+        .find(|f| f.as_ref().unwrap().file_name().to_str().unwrap() == object)
+    {
+        println!("{}", fs::read_to_string(f?.path())?);
+    } else {
+        return Err(PlusGitError::ObjectNotFoundError);
+    }
 
     Ok(())
 }

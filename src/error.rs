@@ -8,6 +8,9 @@ pub enum PlusGitError {
 
     #[error("Error writing or reading file")]
     IoError(#[from] std::io::Error),
+
+    #[error("Object not found")]
+    ObjectNotFoundError,
 }
 
 impl Debug for PlusGitError {

@@ -3,6 +3,7 @@ use std::process::ExitCode;
 
 mod error;
 mod plusgit;
+mod repo;
 
 pub const PLUSGIT_DIR: &'static str = ".plusgit";
 pub const OBJECTS_DIR: &'static str = "objects";
@@ -18,8 +19,13 @@ fn cli() -> Command {
         )
         .subcommand(
             Command::new("hash-object")
-                .about("Compute object ID and optionally create an object from a file")
+                .about("Compute object ID and create an object from a file")
                 .arg(Arg::new("file").required(true)),
+        )
+        .subcommand(
+            Command::new("cat-file")
+                .about("Provide contents or details of repository objects")
+                .arg(Arg::new("object").required(true)),
         )
 }
 
@@ -35,6 +41,12 @@ fn main() -> ExitCode {
         }
         Some(("hash-object", sub_matches)) => {
             if let Err(e) = plusgit::hash_object(sub_matches.get_one::<String>("file").unwrap()) {
+                println!("{e}");
+                return ExitCode::from(1);
+            }
+        }
+        Some(("cat-file", sub_matches)) => {
+            if let Err(e) = plusgit::cat_file(sub_matches.get_one::<String>("object").unwrap()) {
                 println!("{e}");
                 return ExitCode::from(1);
             }
