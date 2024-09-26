@@ -9,7 +9,7 @@ use std::str::FromStr;
 use crate::error::PlusGitError;
 use crate::repo;
 
-#[derive(Serialize_repr, Deserialize_repr, Debug, PartialEq)]
+#[derive(Serialize_repr, Deserialize_repr, Debug, PartialEq, Clone, Copy)]
 #[repr(u8)]
 pub enum ObjectKind {
     Blob = 1,
@@ -65,14 +65,19 @@ pub fn hash(file: &String, kind: ObjectKind) -> Result<String, PlusGitError> {
     Ok(hash)
 }
 
-pub fn from_hash(hash: &String) -> Result<Object, PlusGitError> {
+pub fn from_hash(hash: &String, kind: ObjectKind) -> Result<Object, PlusGitError> {
     if let Some(f) = repo::objects_dir()
         .read_dir()
         .unwrap()
         .find(|f| f.as_ref().unwrap().file_name().to_str().unwrap() == hash)
     {
         let raw: String = std::fs::read_to_string(f?.path())?;
-        Ok(serde_json::from_str(&raw).unwrap())
+        let object: Object = serde_json::from_str(&raw).unwrap();
+        if object.kind == kind {
+            return Ok(object);
+        } else {
+            return Err(PlusGitError::UnexpectedObjectTypeError);
+        }
     } else {
         Err(PlusGitError::ObjectNotFoundError)
     }

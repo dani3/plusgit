@@ -11,6 +11,9 @@ pub enum PlusGitError {
 
     #[error("Object not found")]
     ObjectNotFoundError,
+
+    #[error("Unexpected object type")]
+    UnexpectedObjectTypeError,
 }
 
 impl Debug for PlusGitError {

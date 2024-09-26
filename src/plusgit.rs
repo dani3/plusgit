@@ -33,8 +33,8 @@ pub fn hash_object(filepath: &String, kind: ObjectKind) -> Result<(), PlusGitErr
 
 /// Provide contents or details of repository objects
 /// See https://git-scm.com/docs/git-cat-file
-pub fn cat_file(object: &String) -> Result<(), PlusGitError> {
-    let object = object::from_hash(object)?;
+pub fn cat_file(oid: &String, kind: ObjectKind) -> Result<(), PlusGitError> {
+    let object = object::from_hash(oid, kind)?;
     println!("{}", object.as_str());
     Ok(())
 }

@@ -55,8 +55,12 @@ fn main() -> ExitCode {
                 return ExitCode::from(1);
             }
         }
+        // TODO: Handle different types.
         Some(("cat-file", sub_matches)) => {
-            if let Err(e) = plusgit::cat_file(sub_matches.get_one::<String>("object").unwrap()) {
+            if let Err(e) = plusgit::cat_file(
+                sub_matches.get_one::<String>("object").unwrap(),
+                ObjectKind::Blob,
+            ) {
                 println!("{e}");
                 return ExitCode::from(1);
             }
