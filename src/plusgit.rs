@@ -1,3 +1,4 @@
+use crate::object::ObjectKind;
 /// # Plusgit
 ///
 /// This module implements all the commands of Plusgit.
@@ -19,12 +20,12 @@ pub fn init(path: &String) -> Result<(), PlusGitError> {
 
 /// Compute object ID and create an object from a file.
 /// See https://git-scm.com/docs/git-hash-object
-pub fn hash_object(filepath: &String) -> Result<(), PlusGitError> {
+pub fn hash_object(filepath: &String, kind: ObjectKind) -> Result<(), PlusGitError> {
     if !repo::is_inside_repo() {
         return Err(NotInsideRepoError);
     }
 
-    let hash = object::hash(filepath)?;
+    let hash = object::hash(filepath, kind)?;
     println!("Hash of '{}' is '{}'", filepath, hash);
 
     Ok(())
@@ -33,7 +34,7 @@ pub fn hash_object(filepath: &String) -> Result<(), PlusGitError> {
 /// Provide contents or details of repository objects
 /// See https://git-scm.com/docs/git-cat-file
 pub fn cat_file(object: &String) -> Result<(), PlusGitError> {
-    let content = object::from_hash(object)?;
-    println!("{}", content);
+    let object = object::from_hash(object)?;
+    println!("{}", object.as_str());
     Ok(())
 }

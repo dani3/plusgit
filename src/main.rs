@@ -1,5 +1,6 @@
 use clap::{Arg, Command};
-use std::process::ExitCode;
+use object::ObjectKind;
+use std::{process::ExitCode, str::FromStr};
 
 mod error;
 mod object;
@@ -18,7 +19,15 @@ fn cli() -> Command {
         .subcommand(
             Command::new("hash-object")
                 .about("Compute object ID and create an object from a file")
-                .arg(Arg::new("file").required(true)),
+                .arg(Arg::new("file").required(true))
+                .arg(
+                    Arg::new("type")
+                        .help("Specify the type of object to be created (default: 'blob'). Possible values are 'commit', 'tree', 'blob', and 'tag'.")
+                        .short('t')
+                        .long("type")
+                        .required(false)
+                        .default_value("blob"),
+                ),
         )
         .subcommand(
             Command::new("cat-file")
@@ -38,7 +47,10 @@ fn main() -> ExitCode {
             }
         }
         Some(("hash-object", sub_matches)) => {
-            if let Err(e) = plusgit::hash_object(sub_matches.get_one::<String>("file").unwrap()) {
+            if let Err(e) = plusgit::hash_object(
+                sub_matches.get_one::<String>("file").unwrap(),
+                ObjectKind::from_str(sub_matches.get_one::<String>("type").unwrap()).unwrap(),
+            ) {
                 println!("{e}");
                 return ExitCode::from(1);
             }
